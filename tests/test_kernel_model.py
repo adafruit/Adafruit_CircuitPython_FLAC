@@ -108,8 +108,14 @@ class Kernel:
             out[i] = i32(out[i] + p)
 
 
-adafruit_flac._kernel = Kernel
+def test_kernel_model(monkeypatch):
+    """pytest entry: the decoder tests again, through the 32-bit-checked kernel model."""
+    monkeypatch.setattr(adafruit_flac, "_kernel", Kernel)
+    test_decoder.test_decoder()
+
+
 if __name__ == "__main__":
+    adafruit_flac._kernel = Kernel
     try:
         test_decoder.main()
     finally:

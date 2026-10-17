@@ -94,34 +94,53 @@ def run(path, cost_us):
     return ok, player.underruns, len(played) - len(ref)
 
 
-failures = 0
-media = os.path.join(HERE, "..", "media")
-for name in ("m16_8k_l5.flac", "s16_22k_l5.flac"):
-    path = os.path.join(media, name)
-    ok, under, tail = run(path, 2000)  # 2 ms per update: keeps up
-    print(f"{name} fast: exact={ok} underruns={under} silent tail={tail}")
-    if not ok or under:
-        failures += 1
-    ok, under, _ = run(path, 300000)  # 300 ms per update: cannot keep up
-    print(f"{name} slow: underruns={under} (expected > 0)")
-    if not under:
-        failures += 1
-# loop=True must repeat the file back to back with no gap
-path = os.path.join(media, "m16_8k_l5.flac")
-ref = reference(path)
-out = FakeOut()
-player = adafruit_flac.FLACPlayer(out, buffer_ms=200)
-CLOCK[0] = 0
-player.play(adafruit_flac.FLACDecoder(path), loop=True)
-while len(out.out) < 3 * len(ref) + out.half:
-    player.update()
-    CLOCK[0] += 2_000_000
-    out.tick()
-player.stop()
-ok = out.out[: 3 * len(ref)] == ref * 3
-print(f"loop x3 gapless: {ok} underruns={player.underruns}")
-if not ok or player.underruns:
-    failures += 1
+MEDIA = os.path.join(HERE, "..", "media")
 
-print("FAIL" if failures else "PASS")
-sys.exit(1 if failures else 0)
+
+def main():
+    """Run the player checks; returns the number of failures."""
+    failures = 0
+    media = MEDIA
+    for name in ("m16_8k_l5.flac", "s16_22k_l5.flac"):
+        path = os.path.join(media, name)
+        ok, under, tail = run(path, 2000)  # 2 ms per update: keeps up
+        print(f"{name} fast: exact={ok} underruns={under} silent tail={tail}")
+        if not ok or under:
+            failures += 1
+        ok, under, _ = run(path, 300000)  # 300 ms per update: cannot keep up
+        print(f"{name} slow: underruns={under} (expected > 0)")
+        if not under:
+            failures += 1
+    # loop=True must repeat the file back to back with no gap
+    path = os.path.join(media, "m16_8k_l5.flac")
+    ref = reference(path)
+    out = FakeOut()
+    player = adafruit_flac.FLACPlayer(out, buffer_ms=200)
+    CLOCK[0] = 0
+    player.play(adafruit_flac.FLACDecoder(path), loop=True)
+    while len(out.out) < 3 * len(ref) + out.half:
+        player.update()
+        CLOCK[0] += 2_000_000
+        out.tick()
+    player.stop()
+    ok = out.out[: 3 * len(ref)] == ref * 3
+    print(f"loop x3 gapless: {ok} underruns={player.underruns}")
+    if not ok or player.underruns:
+        failures += 1
+
+    return failures
+
+
+def test_player():
+    """pytest entry (skipped when tools/make_test_media.py has not run)."""
+    import pytest  # noqa: PLC0415
+
+    if not os.path.exists(os.path.join(MEDIA, "m16_8k_l5.flac")):
+        pytest.skip("no test media; run tools/make_test_media.py")
+    assert main() == 0
+
+
+if __name__ == "__main__":
+    f = main()
+    print("FAIL" if f else "PASS")
+    sys.exit(1 if f else 0)

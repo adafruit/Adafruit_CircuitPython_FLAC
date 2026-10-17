@@ -53,3 +53,7 @@ media-device
 
 # Prebuilt native kernels, one per architecture (built by src/Makefile)
 !adafruit_flac/flac_kernel.*.mpy
+
+# Local bundle builds (circuitpython-build-bundles)
+build-*
+bundles

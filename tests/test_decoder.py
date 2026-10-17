@@ -112,8 +112,25 @@ def check(name, accel):
     return "ok  bps=%d ch=%d modes=%s" % (bps, ch, list(dec.lpc_modes))
 
 
+def _names():
+    if not os.path.isdir(MEDIA):
+        return []
+    return sorted(f[:-5] for f in os.listdir(MEDIA) if f.endswith(".flac"))
+
+
+def test_decoder():
+    """pytest entry: every clip in media/ (skipped when tools/make_test_media.py has not run)."""
+    import pytest  # noqa: PLC0415
+
+    names = _names()
+    if not names:
+        pytest.skip("no test media; run tools/make_test_media.py")
+    bad = [(n, r) for n in names if not (r := check(n, False)).startswith("ok")]
+    assert not bad, bad
+
+
 def main():
-    names = sys.argv[1:] or sorted(f[:-5] for f in os.listdir(MEDIA) if f.endswith(".flac"))
+    names = sys.argv[1:] or _names()
     accels = [False]
     if adafruit_flac._np is not None:
         accels.append(True)
