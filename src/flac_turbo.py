@@ -171,6 +171,18 @@ def to_pcm16(pcm: ptr16, ch: ptr32, n: int, nch: int, c: int, sh: int):
 
 
 @micropython.viper
+def gain(pcm: ptr16, n: int, q: int):
+    """Scale n 16-bit samples in place by q / 32768, for 0 <= q <= 32768."""
+    i = 0
+    while i < n:
+        v = int(pcm[i])  # ptr16 loads are unsigned
+        if v & 0x8000:
+            v -= 0x10000
+        pcm[i] = (v * q) >> 15
+        i += 1
+
+
+@micropython.viper
 def decorrelate(a: ptr32, s: ptr32, n: int, code: int):
     """Undo stereo decorrelation in place (RFC 9639 section 4.2). code 8: left/side,
     9: side/right, 10: mid/side. a and s are channels 0 and 1."""

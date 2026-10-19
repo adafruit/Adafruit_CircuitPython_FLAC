@@ -865,6 +865,15 @@ class FLACDecoder:
         return True
 
 
+def _gain(pcm, n, q):
+    # Scale n samples of pcm in place by q / 32768.
+    if _kernel is not None:
+        _kernel.gain(pcm, n, q)
+        return
+    for i in range(n):
+        pcm[i] = (pcm[i] * q) >> 15
+
+
 class FLACPlayer:
     """Stream a `FLACDecoder` to an audio output from Python.
 
@@ -891,10 +900,12 @@ class FLACPlayer:
         running, 120 ms is about the most that fits at 48 kHz stereo
     :param buffer: optional ``array('h')`` to use for both halves (its length
         sets the half size; ``buffer_ms`` is then ignored)
+    :param float level: output level from 0.0 (silent) to 1.0 (unchanged), see `level`
     """
 
-    def __init__(self, audio, *, buffer_ms=64, buffer=None):
+    def __init__(self, audio, *, buffer_ms=64, buffer=None, level=1.0):
         self._audio = audio
+        self.level = level
         self._buffer_ms = buffer_ms
         self._fixed = buffer is not None
         self._buf = buffer
@@ -920,6 +931,17 @@ class FLACPlayer:
     def decoder(self):
         """The `FLACDecoder` being played."""
         return self._decoder
+
+    @property
+    def level(self):
+        """Output level from 0.0 (silent) to 1.0 (unchanged, the default), like
+        ``audiomixer.MixerVoice.level``. Samples are scaled as they are decoded, so a
+        change is heard after the buffered audio (up to two ``buffer_ms`` halves)."""
+        return self._q / 32768
+
+    @level.setter
+    def level(self, value):
+        self._q = min(32768, max(0, int(value * 32768 + 0.5)))
 
     def play(self, decoder, *, loop=False):
         """Start playing ``decoder`` from its current position."""
@@ -972,6 +994,8 @@ class FLACPlayer:
                 self._decoder.rewind()
                 n = self._decoder.fill(self._mv[a : a + room])
             if n:
+                if self._q < 32768:
+                    _gain(self._mv[a : a + n], n, self._q)
                 self._filled += n
                 return
             self._eof = True

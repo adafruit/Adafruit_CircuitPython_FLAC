@@ -26,3 +26,12 @@ files.
 .. literalinclude:: ../examples/flac_fruitjam_sd_hires.py
     :caption: examples/flac_fruitjam_sd_hires.py
     :linenos:
+
+Feather with a MAX98357A I2S amp
+--------------------------------
+
+Plays ``song.flac`` through a mono I2S amp and speaker on any Feather, at a lower ``level``.
+
+.. literalinclude:: ../examples/flac_feather_i2s_amp_max98357a.py
+    :caption: examples/flac_feather_i2s_amp_max98357a.py
+    :linenos:
