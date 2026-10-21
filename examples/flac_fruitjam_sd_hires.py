@@ -1,10 +1,12 @@
 # SPDX-FileCopyrightText: Copyright (c) 2026 Mikey Sklar for Adafruit Industries
+#
 # SPDX-License-Identifier: MIT
+
 """Play an album of FLAC files from the Fruit Jam's microSD card, up to 24-bit/96 kHz.
 
 Reads the card over 4-bit SDIO instead of the SPI mount that CircuitPython and
 Peripherals use. Needs CIRCUITPY_SDCARD_USB = false in settings.toml so the card is free
-for SDIO; a card that was used over SPI needs a power cycle first. 88.2/96 kHz needs an
+for SDIO; a card that was used over SPI would need a power cycle first. 88.2/96 kHz needs an
 adafruit_tlv320 with those clock settings.
 """
 
