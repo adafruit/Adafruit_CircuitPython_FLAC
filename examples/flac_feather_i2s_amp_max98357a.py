@@ -1,6 +1,8 @@
 # SPDX-FileCopyrightText: Copyright (c) 2026 Mikey Sklar for Adafruit Industries
+#
 # SPDX-License-Identifier: MIT
-"""Play a FLAC file once on a Feather through a MAX98357A I2S amp and a speaker.
+
+"""Play a FLAC file once on a Feather through a MAX98357A I2S amplifier and a speaker.
 
 Wiring: Feather A0 to BCLK, A1 to LRC, A2 to DIN, 3V to Vin, GND to GND. The amp mixes
 stereo files down to mono.
@@ -8,7 +10,6 @@ stereo files down to mono.
 
 import audiobusio
 import board
-
 import adafruit_flac
 
 # Make the decoder first: it decodes faster with its buffers in internal RAM.
